@@ -57,7 +57,7 @@ To run the application, ensure the following dependencies are installed:
 
 ## Usage
 
-1. On the Streamlit interface, upload an NPZ file containing medical images.
+1. On the Streamlit interface, upload an NPZ file containing medical images. Try uploading one of the files .npz from `/data/MedSAM_test/CT_Abd` to test.
 2. The file will be sent to the FastAPI server for processing.
 3. The processed image with segmentation masks will be displayed on the Streamlit interface.
 

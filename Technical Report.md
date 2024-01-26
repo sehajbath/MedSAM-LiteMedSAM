@@ -16,7 +16,7 @@ In the development of MedSAM_Lite, a key focus was enhancing inference efficienc
    - The pruned model underwent JIT compilation, optimizing it for enhanced runtime efficiency. This step significantly improved the model's execution speed.
    
 
-### PTQ Static Quantization (inference_3D_quantized.py)
+### Static PTQ (inference_3D_quantized.py)
 
 A significant part of this optimization strategy was exploring quantization, specifically Post-Training Static Quantization (PTQ), due to its potential benefits in reducing model size and computational requirements.
 The decision to implement static calibration PTQ in MedSAM_Lite was a strategic one, aimed at harnessing quantization's benefits while maintaining the model's accuracy and reliability. The challenges faced in the implementation phase, primarily due to backend compatibility issues under time constraints, offer valuable insights and directions for further research and development in the field of efficient AI modeling for medical imaging.

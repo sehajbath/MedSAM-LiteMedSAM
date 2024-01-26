@@ -36,6 +36,11 @@ To run the application, ensure the following dependencies are installed:
 
 ### Running the Application
 
+- To test the inference efficiency:
+   ```
+  bash python inference_3D.py -data_root data/MedSAM_test/CT_Abd -pred_save_dir ./preds/CT_Abd -medsam_lite_checkpoint_path work_dir/medsam_lite_latest.pth -num_workers 4 --save_overlay -png_save_dir ./preds/CT_Abd_overlay --overwrite 
+   ```
+
 1. Start the FastAPI server:
 
    ```bash

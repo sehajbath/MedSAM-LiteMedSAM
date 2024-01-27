@@ -10,7 +10,7 @@ import torch.nn as nn
 import tracemalloc
 import os
 import random
-from functools import partial
+from torch.quantization import QuantStub, DeQuantStub
 
 import torch.nn.functional as F
 
@@ -138,27 +138,37 @@ class MedSAM_Lite(nn.Module):
         self.image_encoder = image_encoder
         self.mask_decoder = mask_decoder
         self.prompt_encoder = prompt_encoder
+        self.quant1 = QuantStub()
+        self.dequant1 = DeQuantStub()
+        self.quant2 = QuantStub()
+        self.dequant2 = DeQuantStub()
 
     def forward(self, image, box_np):
-        image_embedding = self.image_encoder(image) # (B, 256, 64, 64)
-        # do not compute gradients for prompt encoder
+        # Quantization starts here
+        image = self.quant1(image)
+        image_embedding = self.image_encoder(image)  # (B, 256, 64, 64)
+        image_embedding = self.dequant1(image_embedding)  # Dequantize after encoding
+
         with torch.no_grad():
             box_torch = torch.as_tensor(box_np, dtype=torch.float32, device=image.device)
             if len(box_torch.shape) == 2:
-                box_torch = box_torch[:, None, :] # (B, 1, 4)
+                box_torch = box_torch[:, None, :]  # (B, 1, 4)
 
+        box_torch = self.quant2(box_torch)  # Quantize before prompt encoder
         sparse_embeddings, dense_embeddings = self.prompt_encoder(
             points=None,
-            boxes=box_np,
+            boxes=box_torch,
             masks=None,
         )
+        dense_embeddings = self.dequant2(dense_embeddings)  # Dequantize after prompt encoder
+
         low_res_masks, iou_predictions = self.mask_decoder(
-            image_embeddings=image_embedding, # (B, 256, 64, 64)
-            image_pe=self.prompt_encoder.get_dense_pe(), # (1, 256, 64, 64)
-            sparse_prompt_embeddings=sparse_embeddings, # (B, 2, 256)
-            dense_prompt_embeddings=dense_embeddings, # (B, 256, 64, 64)
+            image_embeddings=image_embedding,  # (B, 256, 64, 64)
+            image_pe=self.prompt_encoder.get_dense_pe(),  # (1, 256, 64, 64)
+            sparse_prompt_embeddings=sparse_embeddings,  # (B, 2, 256)
+            dense_prompt_embeddings=dense_embeddings,  # (B, 256, 64, 64)
             multimask_output=False,
-          ) # (B, 1, 256, 256)
+        )  # (B, 1, 256, 256)
 
         return low_res_masks
 
